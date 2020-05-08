@@ -1,17 +1,30 @@
 import React, { Component } from 'react';
 import '../src/CSSsheets/App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import NavBar from "./Components/NavBar.js";
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import FlightPage from "./Components/FlightPage.js";
+import HotelPage from "./Components/HotelPage";
+import Homepage from "./Components/HomePage";
+import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
 
 class App extends Component {
+
   render() {
-    return (
-        <React.Fragment>
-          <div>
-            <NavBar />
-          </div>
-        </React.Fragment>
+    return ( //General Home Page - Flights Page - Hotel Page - Car Rentals(possibly)
+    <Router>
+      <div>
+        <Switch>
+          <Route path="/Hotels">
+            <HotelPage />
+          </Route>
+          <Route path="/Flights">
+            <FlightPage />
+          </Route>
+          <Route path="/">
+            <Homepage />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
     );
   }
 }
