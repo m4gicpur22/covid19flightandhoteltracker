@@ -8,7 +8,9 @@ import {
     Card,
     Container,
     Row,
-    Col
+    Col,
+    Dropdown,
+    DropdownButton
 } from "react-bootstrap";
 import axios from 'axios';
 import ConfigFile from '../config/default.json'; //location of Auth Configs used to access TravelPayouts API
@@ -20,19 +22,59 @@ export class NavBar extends Component {
     constructor(props){
         super(props);
         this.state = {
-            monthyFlightData: [],
+            FlightData: [],
             USACityCodes: [],
             booleanButtonCase: false,
-            defaultoken: AuthAccess
+            defaultoken: AuthAccess,
+            OriginState: "",
+            DestinationState: ""
         };
-        this.toggleWeeklyFlights = this.toggleWeeklyFlights.bind(this);
-        this.renderweeklyFlightDate = this.renderweeklyFlightDate.bind(this);
+        this.toggleFlights = this.toggleFlights.bind(this);
+        this.renderFlightDate = this.renderFlightDate.bind(this);
+        this.handleButtonSubmit = this.handleButtonSubmit.bind(this);
     }
 
-    toggleWeeklyFlights() {
+    toggleFlights() {
         this.setState({
             booleanButtonCase: !this.state.booleanButtonCase
         });
+    }
+
+    handleButtonSubmit(event) {
+
+        const{OriginState, DestinationState, USACityCodes} = this.state;
+
+        var OriginCityCode = "";
+        var DestinationCityCode = "";
+        
+        event.preventDefault();
+
+        console.log("Our Origin is : " + OriginState);
+        console.log("Our Destination is : " + DestinationState);
+
+        //this function is gonna compare the input with the USAcitycodes
+        //call renderFlightDate function and pass the returned city codes as parameters
+
+        //bug where cities that have the same name will return the lastest city code of those repeated city names in that array
+        for(let i = 0; i < USACityCodes.length; i++){
+
+            if(OriginState.toLowerCase() === USACityCodes[i].CityName.toLowerCase() ){
+                console.log("City code Origin: " + USACityCodes[i].CityCode);
+                OriginCityCode = USACityCodes[i].CityCode;
+            }
+
+            if(DestinationState.toLowerCase() === USACityCodes[i].CityName.toLowerCase() ){
+                console.log("City code Destination: " + USACityCodes[i].CityCode);
+                DestinationCityCode = USACityCodes[i].CityCode;
+            }
+
+        }
+
+        console.log("Origin City Code is " + OriginCityCode);
+        console.log("Destination City Cide is " + DestinationCityCode);
+
+        //passing City Codes through
+        this.renderFlightDate(OriginCityCode, DestinationCityCode);
     }
 
     //obtaining all USA city codes before mounting data begins
@@ -45,9 +87,10 @@ export class NavBar extends Component {
         let CitiesData = res.data;
 
         for(let i in CitiesData){
-            var citiesObject = {CityCode: "", CountryCode: ""};
+            var citiesObject = {CityCode: "", CountryCode: "", CityName: ""};
             citiesObject["CityCode"] = CitiesData[i].code;
             citiesObject["CountryCode"] = CitiesData[i].country_code;
+            citiesObject["CityName"] = CitiesData[i].name;
             if(citiesObject["CountryCode"] === "US")
                 CityCodes.push(citiesObject);
         }
@@ -58,7 +101,7 @@ export class NavBar extends Component {
 
     }
 
-    async renderweeklyFlightDate() {
+    async renderFlightDate(Origin, Destination) {
 
         //axios call to obtain flight data for the upcoming month from USA
         //we are going to start by parsing data within United States
@@ -68,7 +111,8 @@ export class NavBar extends Component {
         let config = { //need to fix cors issues later
             headers: {
                 "x-access-token" : this.state.defaultoken,
-                "Content-Type" : "application/x-www-form-urlencoded"
+                "Content-Type" : "application/x-www-form-urlencoded",
+                "Content-Encoding": "gzip"
             }
         }
 
@@ -77,20 +121,20 @@ export class NavBar extends Component {
 
         //current api for month of may airlines from orlando to new york
         //make this total data from all USA flights for the month
-        //console.log(USCities); 
         //496 represents MIA Origin and 504 represents NYC destination
-        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=2020-05&origin=${USCities[496].CityCode}&destination=${USCities[504].CityCode}&calendar_type=departure_date&currency=USD`, config);
+
+        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=2020-05&origin=${Origin}&destination=${Destination}&calendar_type=departure_date&currency=USD`, config);
         
         for(let [key, values] of Object.entries(res.data.data) ) {
             var flightobject = {flightDates: "", flightInfo:""};
-            console.log(`Keys are : ${key} and Values are ` + JSON.stringify(values));
+            //console.log(`Keys are : ${key} and Values are ` + JSON.stringify(values));
             flightobject["flightDates"] = key;
             flightobject["flightInfo"] = values;
             flightData.push(flightobject);
         }                   
 
         //console.log("This is the list of data within the API call: " + JSON.stringify(res.data));
-        this.setState( {monthyFlightData: flightData} );
+        this.setState( {FlightData: flightData} );
     }
 
     render() {
@@ -100,12 +144,36 @@ export class NavBar extends Component {
                 <Navbar bg="dark" variant="dark">
                     <Navbar.Brand onClick={ () => window.location.reload(true) }>FlightandHotel Tracker</Navbar.Brand>
                     <Nav className="mr-auto">
-                        <Nav.Link href="#home">Home</Nav.Link>
-                        <Button variant="outline-info" style={ {padding: "5px"}, {margin: "5px"} } onClick={ () => {
-                            this.renderweeklyFlightDate(); 
-                            this.toggleWeeklyFlights();
-                            }
-                        }>Flights for the Month</Button>
+                    <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
+                        <Form>
+                            <Form.Group controlId="formGroupEmail">
+                                <Form.Label>Origin</Form.Label>
+                                <Form.Control type="text" placeholder="Origin" onChange={ (e) => {
+                                    this.setState({OriginState: e.target.value});
+                                    }
+                                }
+                                />
+                            </Form.Group>
+                            <Form.Group controlId="formGroupPassword">
+                                <Form.Label>Destination</Form.Label>
+                                <Form.Control type="text" placeholder="Destination" onChange={ (e) => {
+                                        this.setState({DestinationState: e.target.value});
+                                    }
+                                }
+                                />
+                            </Form.Group>
+                        </Form>
+                        <Button variant="info" 
+                        onClick={ (event) => {
+                            this.handleButtonSubmit(event);
+                            this.toggleFlights();
+                        }
+                        }
+                        >Submit</Button>
+                    </DropdownButton>
+                    <Button variant="outline-info" style={ {padding: "5px"}, {margin: "5px"} }>Flight Tickets</Button>
+                    <Button variant="outline-info" style={ {padding: "5px"}, {margin: "5px"} }>Hotels for the Month</Button>
+                    <Button variant="outline-info" style={ {padding: "5px"}, {margin: "5px"} }>Hotels Bookings</Button>
                     </Nav>
                     <Form inline>
                         <FormControl type="text" placeholder="Search" className="mr-sm-2" />
@@ -115,7 +183,7 @@ export class NavBar extends Component {
                 <Container>
                     <Row>
                     {
-                        this.state.monthyFlightData.map( (flightInfos, i) => {
+                        this.state.FlightData.map( (flightInfos, i) => {
                         return <Col key={i} style={{padding: "2px"}, {margin: "3px"}}>
                             <Card style={{ width: '18rem' }}>
                                 <Card.Body>
