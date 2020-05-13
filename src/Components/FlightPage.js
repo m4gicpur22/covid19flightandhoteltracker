@@ -28,13 +28,14 @@ export class FlightPage extends Component {
             defaultoken: AuthAccess,
             OriginState: "",
             DestinationState: "",
+            OriginCode: "",
+            DestinationCode: "",
             DepartureDate: "",
             ReturnDate: ""
         };
         this.toggleFlights = this.toggleFlights.bind(this);
         this.renderMonthlyFlightDate = this.renderMonthlyFlightDate.bind(this);
         this.handleButtonSubmit = this.handleButtonSubmit.bind(this);
-        this.handleDates = this.handleDates.bind(this);
         this.renderFlightDatesData = this.renderFlightDatesData.bind(this);
     }
 
@@ -46,16 +47,16 @@ export class FlightPage extends Component {
 
     handleButtonSubmit(event) {
 
+        event.preventDefault();
+
         const{OriginState, DestinationState, USACityCodes} = this.state;
 
         var OriginCityCode = "";
         var DestinationCityCode = "";
-        
-        event.preventDefault();
-        
-        console.log("Our Origin is : " + OriginState);
-        console.log("Our Destination is : " + DestinationState);
 
+        if(OriginState === "" || DestinationState === "") //want this to return an alert to the screen
+            console.log("Please Enter a Origin City and Destination");
+        
         //this function is gonna compare the input with the USAcitycodes
         //call renderFlightDate function and pass the returned city codes as parameters
 
@@ -71,29 +72,16 @@ export class FlightPage extends Component {
             }
         }
 
-        console.log("Origin City Code is " + OriginCityCode);
-        console.log("Destination City Cide is " + DestinationCityCode);
+        this.setState({OriginCode: OriginCityCode});
+        this.setState({DestinationCode : DestinationCityCode});
 
         //passing City Codes through
         this.renderMonthlyFlightDate(OriginCityCode, DestinationCityCode);
     }
 
-    handleDates(event) {
-
-        var DepartureDate = this.state.DepartureDate;
-        var ReturnDate = this.state.ReturnDate;
-
-        //function is going to translate input dates into date object
-
-        console.log("This is the handleDates function");
-
-        this.renderFlightDatesData(DepartureDate, ReturnDate);
-    }
-
     //obtaining all USA city codes before mounting data begins
     async componentWillMount() {
         //this function is going to get all the USA city codes from the travelpayouts API
-
         const CityCodes = [];
 
         let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`);
@@ -107,56 +95,57 @@ export class FlightPage extends Component {
             if(citiesObject["CountryCode"] === "US")
                 CityCodes.push(citiesObject);
         }
-        //console.log("This is the list of data within the API call: " + JSON.stringify(res.data))
-        //console.log("Length of this API data is " + CitiesData.length);
 
         this.setState({USACityCodes: CityCodes});
-
     }
 
-    async renderFlightDatesData(DepartureDate, ReturnDate){
-
-        const FlightData = [];
-
+    async renderFlightDatesData(event, DepartureDate, ReturnDate){
         //this function is gonna analyze dates taken by the user and show flights between departure date and return date given by the user
-        
+        event.preventDefault();
+
+        const {OriginState, DestinationState, defaultoken, OriginCode, DestinationCode} = this.state;
+        const FlightDateData = [];
+
         let config = { //need to fix cors issues later
             headers: {
-                "x-access-token" : this.state.defaultoken,
+                "x-access-token" : defaultoken,
                 "Content-Type" : "application/x-www-form-urlencoded",
                 "Content-Encoding": "gzip"
             }
         }
+        
+        //bug with toggling between buttons for "Flights for the Month" and "Flights Tickets"
+        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=${DepartureDate}&return_date=${ReturnDate}&origin=${OriginCode}&destination=${DestinationCode}&calendar_type=departure_date&currency=USD`, config);
 
-        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=2020-05-09&return_date=2020-05-11&origin=MIA&destination=NYC&calendar_type=departure_date&currency=USD`, config);
+        console.log("The data shown is " + JSON.stringify(res.data.data) );
 
-        console.log("The data shown is " + res.data.data);
+        for(let [key, values] of Object.entries(res.data.data) ) {
+            var flightobject = {flightDates: "", flightInfo:""};
+            flightobject["flightDates"] = key;
+            flightobject["flightInfo"] = values;
+            FlightDateData.push(flightobject);
+        }          
 
-        //this.setState({FlightData: FlightData})
-
+        this.setState({FlightData: FlightDateData});
     }
 
     async renderMonthlyFlightDate(Origin, Destination) {
 
         //axios call to obtain flight data for the upcoming month from USA
         //we are going to start by parsing data within United States
-
+        const {defaultoken} = this.state;
         const currentMonthflightData = [];
 
         let config = { //need to fix cors issues later
             headers: {
-                "x-access-token" : this.state.defaultoken,
+                "x-access-token" : defaultoken,
                 "Content-Type" : "application/x-www-form-urlencoded",
                 "Content-Encoding": "gzip"
             }
         }
 
-        var USCities = this.state.USACityCodes;
-        const NumberofUSCities = this.state.USACityCodes.length;
-
         //current api for month of may airlines from orlando to new york
         //make this total data from all USA flights for the month
-        //496 represents MIA Origin and 504 represents NYC destination
 
         let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=2020-05&origin=${Origin}&destination=${Destination}&calendar_type=departure_date&currency=USD`, config);
 
@@ -172,13 +161,14 @@ export class FlightPage extends Component {
 
     render() {
 
-        const{FlightData, booleanButtonCase} = this.state;
+        const{FlightData, booleanButtonCase, DepartureDate, ReturnDate} = this.state;
 
         return(
             <React.Fragment>
                 <Navbar bg="dark" variant="dark">
                     <Navbar.Brand onClick={ () => window.location.reload(true) }>FlightandHotel Tracker</Navbar.Brand>
                     <Nav className="mr-auto">
+                        <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                         <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
                             <Form>
                                 <Form.Group controlId="formGroupEmail">
@@ -215,7 +205,7 @@ export class FlightPage extends Component {
                                     }
                                     />
                                 </Form.Group>
-                                <Form.Group controlId="formGroupPassword">
+                                <Form.Group controlId="formGroupEmail">
                                     <Form.Label>Return Date</Form.Label>
                                     <Form.Control type="text" placeholder="Return Date" onChange={ (e) => {
                                             this.setState({ReturnDate: e.target.value});
@@ -225,7 +215,8 @@ export class FlightPage extends Component {
                                 </Form.Group>
                             </Form>
                             <Button variant="info" onClick={ (event) => {
-                                    this.handleDates(event);
+                                    this.renderFlightDatesData(event, DepartureDate, ReturnDate);
+                                    //this.toggleFlights();
                                 }
                             }>Submit</Button>
                         </DropdownButton>
@@ -248,8 +239,8 @@ export class FlightPage extends Component {
                                         <b>Flight Number</b>: {flightInfos.flightInfo.flight_number}<br />
                                         <b># of Stops</b> : {flightInfos.flightInfo.transfers}<br />
                                     </Card.Text>
-                                    <b>Origin: </b> {flightInfos.flightInfo.origin} <br />
-                                    <b>Destination: </b> {flightInfos.flightInfo.destination} <br />
+                                    <b>Origin: </b> {flightInfos.flightInfo.origin}<br />
+                                    <b>Destination: </b> {flightInfos.flightInfo.destination}<br />
                                     <b>Departure Time:</b> {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
                                     <b>Return Time:</b> {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
                                     <b>Prices:</b> ${flightInfos.flightInfo.price}.00<br />
