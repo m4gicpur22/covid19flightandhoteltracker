@@ -12,8 +12,11 @@ import {
     Row,
     Col,
     Dropdown,
-    DropdownButton
+    DropdownButton,
+    Image
 } from "react-bootstrap";
+import HotelImage from '../PNGFiles/allen-dewberry-jr-XjKiG46fkQI-unsplash.jpg';
+import '../CSSsheets/Travels.css';
 
 const AuthAccess = ConfigFile.UserInfo.AuthToken;
 
@@ -46,7 +49,6 @@ export class HotelPage extends Component {
     async componentWillMount() {
         //this function is going to get all the USA city codes from the travelpayouts API
         const CityCodes = [];
-
         let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`);
         let CitiesData = res.data;
 
@@ -65,9 +67,7 @@ export class HotelPage extends Component {
     async renderHotelData(CityCode){
 
         const HotelData = [];
-
-        const{defaultToken, CheckIn, CheckOut} = this.state;
-
+        const {defaultToken, CheckIn, CheckOut} = this.state;
         let config = { //need to fix cors issues later
             headers: {
                 "x-access-token" : defaultToken,
@@ -77,9 +77,6 @@ export class HotelPage extends Component {
         }
 
         let res = await axios.get(`http://engine.hotellook.com/api/v2/cache.json?location=${CityCode}&checkIn=${CheckIn}&checkOut=${CheckOut}&currency=USD`, config);
-
-        //console.log("This is the Hotel data" + JSON.stringify(res.data));
-
         let HotelInfo = res.data;
 
         for(let i = 0; i < HotelInfo.length; i++){
@@ -94,17 +91,13 @@ export class HotelPage extends Component {
             HotelData.push(HotelObject);
         }
 
-        console.log("Array for Hotel Data is: " + HotelData);
-
         this.setState({HotelData: HotelData});
     }
 
     handleButtonSubmit(event) {
 
         event.preventDefault();
-
-        const{CityInput, CheckIn, CheckOut, USACityCodes} = this.state;
-
+        const{CityInput,  USACityCodes} = this.state;
         var CityCode = "";
 
         if(CityInput === "") //want this to return an alert to the screen
@@ -125,12 +118,21 @@ export class HotelPage extends Component {
 
         const {hotelbooleancase, HotelData, CheckIn, CheckOut} = this.state;
 
-        var EndBookingDate = new Date(CheckIn);
-        var StartBookingDate = new Date(CheckOut);
+        var StartBookingDate = new Date(CheckIn);
+        var EndBookingDate = new Date(CheckOut);
 
-        //console.log("Total Number of Days of Booking: " + ( EndBookingDate.getDate() - StartBookingDate.getDate() ) );
+        //bug where previous month that had 31 days, the first day of next month would return same value as the last day of the previous month
+        //more bugs for dates to fix
+        if(CheckIn.toString().slice(8,10) === "01" && StartBookingDate.getDate() === 31)
+            StartBookingDate.setDate(StartBookingDate.getDate() + 1);
+        if(CheckOut.toString().slice(8,10) === "01" &&  EndBookingDate.getDate() === 31)
+            EndBookingDate.setDate(EndBookingDate.getDate() + 1);
 
-        var numberofBookingDays = ( (EndBookingDate.getDate() - StartBookingDate.getDate()) - 2);
+        console.log("Number of ending booking days: " + EndBookingDate.getDate() );
+        console.log("Number of starting booking days: " + StartBookingDate.getDate() );
+
+        var numberofBookingDays = ( ( EndBookingDate.getDate() - StartBookingDate.getDate() ) + 2 );
+        console.log("Number of total booking days: " + numberofBookingDays);
 
         return(
         <React.Fragment>
@@ -174,7 +176,9 @@ export class HotelPage extends Component {
                 </Form>
             </Navbar>
             { hotelbooleancase ? 
-                <Container>
+            <div className="div-container2">
+                <Image src={HotelImage} style={ {height: "100%"}, {width: "100%"}, {opacity: "0.3"}} />
+                <Container className="container2">
                     <Row>
                     {
                         HotelData.map( (HotelInfos, i) => {
@@ -185,12 +189,12 @@ export class HotelPage extends Component {
                                         <Card.Text>
                                             <b>Cityname</b>: {HotelInfos.CityName} <br />
                                             <b>State</b>: {HotelInfos.State} <br />
-                                            <b>Country</b> : {HotelInfos.Country} <br />
+                                            <b>Country</b>: {HotelInfos.Country} <br />
                                         </Card.Text>
                                     <b>Check In Date: </b> {CheckIn} <br />
                                     <b>Check Out Date: </b> {CheckOut} <br />
                                     <b># of stars: </b> {HotelInfos.stars} <br />
-                                    <b>Price per Day:</b> ${ ((HotelInfos.PriceAverage) / (numberofBookingDays)).toFixed(2) } <br />
+                                    <b>Price per Day:</b> ${ ( (HotelInfos.PriceAverage)/(numberofBookingDays) ).toFixed(2) } <br />
                                     <b>Total Price of Stay:</b> ${HotelInfos.PriceAverage.toFixed(2)} <br />
                                 </Card.Body>
                             </Card>
@@ -198,8 +202,13 @@ export class HotelPage extends Component {
                         })
                     }
                     </Row>
-            </Container>
-            : "" }
+                </Container>
+            </div>
+            : 
+            <div>
+                <img src={HotelImage} alt="HotelImage"></img>
+            </div>
+            }
         </React.Fragment>
         );
     }

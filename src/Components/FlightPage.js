@@ -10,10 +10,13 @@ import {
     Row,
     Col,
     Dropdown,
-    DropdownButton
+    DropdownButton,
+    Image
 } from "react-bootstrap";
 import axios from 'axios';
 import ConfigFile from '../config/default.json'; //location of Auth Configs used to access TravelPayouts API
+import FlightImage from '../PNGFiles/nathan-hobbs-qmWqUl8Uvsc-unsplash.jpg';
+import '../CSSsheets/Travels.css';
 
 const AuthAccess = ConfigFile.UserInfo.AuthToken;
 
@@ -226,32 +229,39 @@ export class FlightPage extends Component {
                     </Form>
                 </Navbar>
                 {booleanButtonCase ? //mapping out flight data for the upcoming week, when button is pressed we map our data below
-                <Container>
-                    <Row>
-                    {
-                        FlightData.map( (flightInfos, i) => {
-                        return <Col key={i} style={{padding: "2px"}, {margin: "3px"}}>
-                            <Card style={{ width: '18rem' }}>
-                                <Card.Body>
-                                <Card.Title>{flightInfos.flightInfo.departure_at.toString().slice(0,10)} -- {flightInfos.flightInfo.return_at.toString().slice(0,10)}</Card.Title>
-                                    <Card.Text>
-                                        <b>AirLine</b>: {flightInfos.flightInfo.airline}<br />
-                                        <b>Flight Number</b>: {flightInfos.flightInfo.flight_number}<br />
-                                        <b># of Stops</b> : {flightInfos.flightInfo.transfers}<br />
-                                    </Card.Text>
-                                    <b>Origin: </b> {flightInfos.flightInfo.origin}<br />
-                                    <b>Destination: </b> {flightInfos.flightInfo.destination}<br />
-                                    <b>Departure Time:</b> {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
-                                    <b>Return Time:</b> {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
-                                    <b>Prices:</b> ${flightInfos.flightInfo.price}.00<br />
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                        })
-                    }
-                    </Row>
-                </Container>
-                : "" }
+                <div className="div-container">
+                    <Image src={FlightImage} style={ {height: "100%"}, {width: "100%"}, {opacity: "0.3"}} />
+                    <Container className="container">
+                        <Row>
+                        {
+                            FlightData.map( (flightInfos, i) => {
+                            return <Col key={i} style={{padding: "2px"}, {margin: "3px"}}>
+                                <Card style={{ width: '18rem' }}>
+                                    <Card.Body>
+                                    <Card.Title>{flightInfos.flightInfo.departure_at.toString().slice(0,10)} -- {flightInfos.flightInfo.return_at.toString().slice(0,10)}</Card.Title>
+                                        <Card.Text>
+                                            <b>AirLine</b>: {flightInfos.flightInfo.airline}<br />
+                                            <b>Flight Number</b>: {flightInfos.flightInfo.flight_number}<br />
+                                            <b># of Stops</b> : {flightInfos.flightInfo.transfers}<br />
+                                        </Card.Text>
+                                        <b>Origin: </b> {flightInfos.flightInfo.origin}<br />
+                                        <b>Destination: </b> {flightInfos.flightInfo.destination}<br />
+                                        <b>Departure Time:</b> {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
+                                        <b>Return Time:</b> {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
+                                        <b>Prices:</b> ${flightInfos.flightInfo.price}.00<br />
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                            })
+                        }
+                        </Row>
+                    </Container>
+                </div>
+                : 
+                <div>
+                    <img src={FlightImage} alt="FlightsImage"></img>
+                </div>
+                }
           </React.Fragment>
         );
     }

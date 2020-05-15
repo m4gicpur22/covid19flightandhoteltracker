@@ -1,0 +1,31 @@
+.div-container {
+    position: relative;
+}
+
+.div-container2 {
+    position: relative;
+}
+
+img {
+    height: 100%;
+    width: 100%;
+}
+
+.div-container .container {
+    position: absolute;
+    top: 15.5%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+}
+
+.div-container2 .container2 {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+}
+
+
+
