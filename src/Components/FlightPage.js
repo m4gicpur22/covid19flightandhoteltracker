@@ -87,7 +87,15 @@ export class FlightPage extends Component {
         //this function is going to get all the USA city codes from the travelpayouts API
         const CityCodes = [];
 
-        let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`);
+        let config = { //need to fix cors issues later
+            headers: {
+                "Content-Type" : "application/x-www-form-urlencoded",
+                "Content-Encoding": "gzip",
+                "Access-Control-Allow-Origin": "*"
+            }
+        }
+
+        let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`, config);
         let CitiesData = res.data;
 
         for(let i in CitiesData){
@@ -113,7 +121,8 @@ export class FlightPage extends Component {
             headers: {
                 "x-access-token" : defaultoken,
                 "Content-Type" : "application/x-www-form-urlencoded",
-                "Content-Encoding": "gzip"
+                "Content-Encoding": "gzip",
+                "Access-Control-Allow-Origin": "*"
             }
         }
         
@@ -143,7 +152,8 @@ export class FlightPage extends Component {
             headers: {
                 "x-access-token" : defaultoken,
                 "Content-Type" : "application/x-www-form-urlencoded",
-                "Content-Encoding": "gzip"
+                "Content-Encoding": "gzip",
+                "Access-Control-Allow-Origin": "*"
             }
         }
 
@@ -165,11 +175,12 @@ export class FlightPage extends Component {
     render() {
 
         const{FlightData, booleanButtonCase, DepartureDate, ReturnDate} = this.state;
+        var NavBarClassName = !booleanButtonCase ? "NavBar" : "NavBar-NotFixed";
 
         return(
             <React.Fragment>
-                <Navbar bg="dark" variant="dark">
-                    <Navbar.Brand onClick={ () => window.location.reload(true) }>FlightandHotel Tracker</Navbar.Brand>
+                <Navbar bg="dark" variant="dark" className={NavBarClassName}>
+                    <Navbar.Brand onClick={ () => window.location.reload(true) }>CovidTravel</Navbar.Brand>
                     <Nav className="mr-auto">
                         <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                         <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights for the Month" style={ {padding: "5px"}, {margin: "5px"}}>

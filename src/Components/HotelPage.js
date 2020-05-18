@@ -49,7 +49,16 @@ export class HotelPage extends Component {
     async componentWillMount() {
         //this function is going to get all the USA city codes from the travelpayouts API
         const CityCodes = [];
-        let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`);
+
+        let config = { //need to fix cors issues later
+            headers: {
+                "Content-Type" : "application/x-www-form-urlencoded",
+                "Content-Encoding": "gzip",
+                "Access-Control-Allow-Origin": "*"
+            }
+        }
+        
+        let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`, config);
         let CitiesData = res.data;
 
         for(let i in CitiesData){
@@ -72,7 +81,8 @@ export class HotelPage extends Component {
             headers: {
                 "x-access-token" : defaultToken,
                 "Content-Type" : "application/x-www-form-urlencoded",
-                "Content-Encoding": "gzip"
+                "Content-Encoding": "gzip",
+                "Access-Control-Allow-Origin": "*"
             }
         }
 
@@ -134,10 +144,12 @@ export class HotelPage extends Component {
         var numberofBookingDays = ( ( EndBookingDate.getDate() - StartBookingDate.getDate() ) + 2 );
         console.log("Number of total booking days: " + numberofBookingDays);
 
+        var NavBarClassName = !hotelbooleancase ? "NavBar" : "NavBar-NotFixed";
+
         return(
         <React.Fragment>
-            <Navbar bg="dark" variant="dark">
-                <Navbar.Brand onClick={ () => window.location.reload(true) }>FlightandHotel Tracker</Navbar.Brand>
+            <Navbar bg="dark" variant="dark" className={NavBarClassName}>
+                <Navbar.Brand onClick={ () => window.location.reload(true) }>CovidTravel</Navbar.Brand>
                 <Nav className="mr-auto">
                     <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                     <DropdownButton variant="outline-info" id="dropdown-item-button" title="Hotels for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
@@ -182,7 +194,7 @@ export class HotelPage extends Component {
                     <Row>
                     {
                         HotelData.map( (HotelInfos, i) => {
-                        return <Col key={i} style={{padding: "2px"}, {margin: "3px"}}>
+                        return <Col key={i} style={{padding: "10px"}, {margin: "10px"}}>
                             <Card style={{ width: '18rem' }}>
                                 <Card.Body>
                                     <Card.Title>{HotelInfos.HotelName}</Card.Title>
