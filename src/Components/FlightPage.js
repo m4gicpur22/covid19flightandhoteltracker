@@ -11,7 +11,8 @@ import {
     Col,
     Dropdown,
     DropdownButton,
-    Image
+    Image,
+    Alert
 } from "react-bootstrap";
 import axios from 'axios';
 import ConfigFile from '../config/default.json'; //location of Auth Configs used to access TravelPayouts API
@@ -185,54 +186,67 @@ export class FlightPage extends Component {
                         <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                         <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
                             <Form>
-                                <Form.Group controlId="formGroupEmail">
-                                    <Form.Label>Origin</Form.Label>
-                                    <Form.Control type="text" placeholder="Origin" onChange={ (e) => {
+                                <Form.Group controlId="formGroupEmail" className="InputForm">
+                                    <Form.Label className="InputText">Origin</Form.Label>
+                                    <Form.Control style={{textAlign: "center"}} type="text" placeholder="Origin" onChange={ (e) => {
                                         this.setState({OriginState: e.target.value});
                                         }
                                     }
                                     />
                                 </Form.Group>
-                                <Form.Group controlId="formGroupPassword">
-                                    <Form.Label>Destination</Form.Label>
-                                    <Form.Control type="text" placeholder="Destination" onChange={ (e) => {
+                                <Form.Group controlId="formGroupPassword" className="InputForm">
+                                    <Form.Label className="InputText">Destination</Form.Label>
+                                    <Form.Control style={{textAlign: "center"}} type="text" placeholder="Destination" onChange={ (e) => {
                                             this.setState({DestinationState: e.target.value});
                                         }
                                     }
                                     />
                                 </Form.Group>
                             </Form>
-                            <Button variant="info" onClick={ (event) => {
-                                this.handleButtonSubmit(event);
-                                this.toggleFlights();
+                            <div className="Button-Div">
+                                <Button style={{margin: "0 auto"}} variant="info" onClick={ (event) => {
+                                        if(this.state.OriginState === "" || this.state.DestinationState === ""){
+                                            alert("Please Enter an Origin or Destination!");
+                                        }
+                                        else {
+                                            this.handleButtonSubmit(event);
+                                            this.toggleFlights();
+                                        }
+                                    }
                                 }
-                            }
-                            >Submit</Button>
+                                >Submit</Button>
+                            </div>
                         </DropdownButton>
                         <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights Tickets" style={ {padding: "5px"}, {margin: "5px"}}>
                             <Form>
-                                <Form.Group controlId="formGroupEmail">
-                                    <Form.Label>Departure Date</Form.Label>
-                                    <Form.Control type="text" placeholder="Departure Date" onChange={ (e) => {
+                                <Form.Group controlId="formGroupEmail" className="InputForm">
+                                    <Form.Label className="InputText">Departure Date</Form.Label>
+                                    <Form.Control style={{textAlign: "center"}} type="text" placeholder="Departure Date" onChange={ (e) => {
                                         this.setState({DepartureDate: e.target.value});
                                         }
                                     }
                                     />
                                 </Form.Group>
-                                <Form.Group controlId="formGroupEmail">
-                                    <Form.Label>Return Date</Form.Label>
-                                    <Form.Control type="text" placeholder="Return Date" onChange={ (e) => {
+                                <Form.Group controlId="formGroupEmail" className="InputForm">
+                                    <Form.Label className="InputText">Return Date</Form.Label>
+                                    <Form.Control style={{textAlign: "center"}} type="text" placeholder="Return Date" onChange={ (e) => {
                                             this.setState({ReturnDate: e.target.value});
                                         }
                                     }
                                     />
                                 </Form.Group>
                             </Form>
+                            <div className="Button-Div">
                             <Button variant="info" onClick={ (event) => {
-                                    this.renderFlightDatesData(event, DepartureDate, ReturnDate);
-                                    //this.toggleFlights();
+                                    if(DepartureDate === "" || ReturnDate === "")
+                                        alert("Please Enter a Depature Date and Return Date");
+                                    else{
+                                        this.renderFlightDatesData(event, DepartureDate, ReturnDate);
+                                        //this.toggleFlights();
+                                    }                                
                                 }
                             }>Submit</Button>
+                            </div>
                         </DropdownButton>
                     </Nav>
                     <Form inline>
@@ -253,13 +267,13 @@ export class FlightPage extends Component {
                                         <Card.Text>
                                             <b>AirLine</b>: {flightInfos.flightInfo.airline}<br />
                                             <b>Flight Number</b>: {flightInfos.flightInfo.flight_number}<br />
-                                            <b># of Stops</b> : {flightInfos.flightInfo.transfers}<br />
+                                            <b># of Stops</b>: {flightInfos.flightInfo.transfers}<br />
                                         </Card.Text>
-                                        <b>Origin: </b> {flightInfos.flightInfo.origin}<br />
-                                        <b>Destination: </b> {flightInfos.flightInfo.destination}<br />
-                                        <b>Departure Time:</b> {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
-                                        <b>Return Time:</b> {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
-                                        <b>Prices:</b> ${flightInfos.flightInfo.price}.00<br />
+                                        <b>Origin </b>: {flightInfos.flightInfo.origin}<br />
+                                        <b>Destination </b>: {flightInfos.flightInfo.destination}<br />
+                                        <b>Departure Time</b>: {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
+                                        <b>Return Time</b>: {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
+                                        <b>Prices</b>: ${flightInfos.flightInfo.price}.00<br />
                                     </Card.Body>
                                 </Card>
                             </Col>

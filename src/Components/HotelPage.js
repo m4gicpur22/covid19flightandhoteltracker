@@ -32,7 +32,8 @@ export class HotelPage extends Component {
             CheckOut: "",
             CityInput: "",
             CityCode: "",
-            hotelbooleancase: false
+            hotelbooleancase: false,
+            TotalNumberofBookingDays: 0        
         };
         this.renderHotelData = this.renderHotelData.bind(this);
         this.handleButtonSubmit = this.handleButtonSubmit.bind(this);
@@ -57,7 +58,7 @@ export class HotelPage extends Component {
                 "Access-Control-Allow-Origin": "*"
             }
         }
-        
+
         let res = await axios.get(`https://api.travelpayouts.com/data/en/cities.json`, config);
         let CitiesData = res.data;
 
@@ -107,7 +108,7 @@ export class HotelPage extends Component {
     handleButtonSubmit(event) {
 
         event.preventDefault();
-        const{CityInput,  USACityCodes} = this.state;
+        const{CityInput, USACityCodes} = this.state;
         var CityCode = "";
 
         if(CityInput === "") //want this to return an alert to the screen
@@ -125,25 +126,8 @@ export class HotelPage extends Component {
     }
 
     render(){
-
-        const {hotelbooleancase, HotelData, CheckIn, CheckOut} = this.state;
-
-        var StartBookingDate = new Date(CheckIn);
-        var EndBookingDate = new Date(CheckOut);
-
-        //bug where previous month that had 31 days, the first day of next month would return same value as the last day of the previous month
-        //more bugs for dates to fix
-        if(CheckIn.toString().slice(8,10) === "01" && StartBookingDate.getDate() === 31)
-            StartBookingDate.setDate(StartBookingDate.getDate() + 1);
-        if(CheckOut.toString().slice(8,10) === "01" &&  EndBookingDate.getDate() === 31)
-            EndBookingDate.setDate(EndBookingDate.getDate() + 1);
-
-        console.log("Number of ending booking days: " + EndBookingDate.getDate() );
-        console.log("Number of starting booking days: " + StartBookingDate.getDate() );
-
-        var numberofBookingDays = ( ( EndBookingDate.getDate() - StartBookingDate.getDate() ) + 2 );
-        console.log("Number of total booking days: " + numberofBookingDays);
-
+        
+        const {hotelbooleancase, HotelData, CheckIn, CheckOut, CityInput, TotalNumberofBookingDays} = this.state;
         var NavBarClassName = !hotelbooleancase ? "NavBar" : "NavBar-NotFixed";
 
         return(
@@ -154,33 +138,46 @@ export class HotelPage extends Component {
                     <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                     <DropdownButton variant="outline-info" id="dropdown-item-button" title="Hotels for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
                         <Form>
-                            <Form.Group controlId="formGroupEmail">
-                                <Form.Label>City</Form.Label>
-                                <Form.Control type="text" placeholder="City" onChange={ (e) => {
+                            <Form.Group controlId="formGroupEmail" className="InputForm">
+                                <Form.Label className="InputText">City</Form.Label>
+                                <Form.Control style={{textAlign: "center"}} type="text" placeholder="City" onChange={ (e) => {
                                         this.setState({CityInput: e.target.value});
                                         }
                                     }/>
                             </Form.Group>
-                            <Form.Group controlId="formGroupEmail">
-                                <Form.Label>Check-in Date</Form.Label>
-                                <Form.Control type="text" placeholder="Check-in Date" onChange={ (e) => {
+                            <Form.Group controlId="formGroupEmail" className="InputForm">
+                                <Form.Label className="InputText">Check-in Date</Form.Label>
+                                <Form.Control style={{textAlign: "center"}} type="text" placeholder="Check-in Date" onChange={ (e) => {
                                         this.setState({CheckIn: e.target.value});
                                         }
                                     }/>
                             </Form.Group>
-                            <Form.Group controlId="formGroupEmail">
-                                <Form.Label>Check-Out Date</Form.Label>
-                                <Form.Control type="text" placeholder="Check-Out Date" onChange={ (e) => {
+                            <Form.Group controlId="formGroupEmail" className="InputForm">
+                                <Form.Label className="InputText" >Check-Out Date</Form.Label>
+                                <Form.Control style={{textAlign: "center"}} type="text" placeholder="Check-Out Date" onChange={ (e) => {
                                         this.setState({CheckOut: e.target.value});
                                         }
                                     }/>
                             </Form.Group>
                         </Form>
+                        <div className="Button-Div">
                         <Button variant="info" onClick={ (event) => {
+                            if(CheckIn === "" || CheckOut === "" || CityInput === "")
+                                alert("Please enter a City and Booking Dates!");
+                            else {
+
+                                let StartBookingDate = new Date(CheckIn);
+                                let EndBookingDate = new Date(CheckOut);
+                                let numberofBookingDays = ( ( EndBookingDate.getTime() - StartBookingDate.getTime() ) / ( 24*60*60*1000 ));
+                                console.log("Number of total booking days: " + numberofBookingDays);
+
+                                this.setState({TotalNumberofBookingDays: numberofBookingDays});
                                 this.handleButtonSubmit(event);
                                 this.toggleHotels();
                             }
+                            }
                         }>Submit</Button>
+                        </div>
                     </DropdownButton>
                 </Nav>
                 <Form inline>
@@ -195,7 +192,7 @@ export class HotelPage extends Component {
                     {
                         HotelData.map( (HotelInfos, i) => {
                         return <Col key={i} style={{padding: "10px"}, {margin: "10px"}}>
-                            <Card style={{ width: '18rem' }}>
+                            <Card style={{ width: '18em' }}>
                                 <Card.Body>
                                     <Card.Title>{HotelInfos.HotelName}</Card.Title>
                                         <Card.Text>
@@ -206,7 +203,7 @@ export class HotelPage extends Component {
                                     <b>Check In Date: </b> {CheckIn} <br />
                                     <b>Check Out Date: </b> {CheckOut} <br />
                                     <b># of stars: </b> {HotelInfos.stars} <br />
-                                    <b>Price per Day:</b> ${ ( (HotelInfos.PriceAverage)/(numberofBookingDays) ).toFixed(2) } <br />
+                                    <b>Price per Day:</b> ${ ( (HotelInfos.PriceAverage)/(TotalNumberofBookingDays) ).toFixed(2) } <br />
                                     <b>Total Price of Stay:</b> ${HotelInfos.PriceAverage.toFixed(2)} <br />
                                 </Card.Body>
                             </Card>
