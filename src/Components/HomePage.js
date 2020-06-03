@@ -3,8 +3,6 @@ import {
     Button,
     Navbar,
     Nav,
-    Form,
-    FormControl,
     Image
 } from "react-bootstrap";
 import FlightImage from '../PNGFiles/tom-barrett-M0AWNxnLaMw-unsplash.jpg';
@@ -18,7 +16,7 @@ export class HomePage extends Component {
                 <Navbar bg="dark" variant="dark" className="NavBar">
                     <Navbar.Brand onClick={ () => window.location.reload(true) }>CovidTravel</Navbar.Brand>
                     <Nav className="mr-auto">
-                        <Button variant="outline-info" href="/Flights" style={ {padding: "5px"}, {margin: "5px"}}>Flights</Button>
+                        <Button variant="outline-info" href="/Flights" style={{padding: "5px"}, {margin: "5px"}}>Flights</Button>
                         <Button variant="outline-info" href="/Hotels" style={{padding: "5px"}, {margin: "5px"}}>Hotels</Button>
                     </Nav>
                 </Navbar>

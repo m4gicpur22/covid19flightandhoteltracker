@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import '../src/CSSsheets/App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import FlightPage from "./Components/FlightPage.js";
-import HotelPage from "./Components/HotelPage";
-import Homepage from "./Components/HomePage";
+import HotelPage from "./Components/HotelPage.js";
+import Homepage from "./Components/HomePage.js";
 import { BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
 
 class App extends Component {

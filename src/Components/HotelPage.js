@@ -17,6 +17,8 @@ import {
 } from "react-bootstrap";
 import HotelImage from '../PNGFiles/allen-dewberry-jr-XjKiG46fkQI-unsplash.jpg';
 import '../CSSsheets/Travels.css';
+import { Rating } from '@material-ui/lab';
+import SearchBar from '../Components/SearchBar.js';
 
 const AuthAccess = ConfigFile.UserInfo.AuthToken;
 
@@ -33,16 +35,23 @@ export class HotelPage extends Component {
             CityInput: "",
             CityCode: "",
             hotelbooleancase: false,
-            TotalNumberofBookingDays: 0        
+            TotalNumberofBookingDays: 0,
+            FilteredHotels: []
         };
         this.renderHotelData = this.renderHotelData.bind(this);
         this.handleButtonSubmit = this.handleButtonSubmit.bind(this);
-        this.toggleHotels = this.toggleHotels.bind(this);
+        this.revealHotelInfo = this.revealHotelInfo.bind(this);
+        this.FilteredHotelData = this.FilteredHotelData.bind(this);
     }
 
-    toggleHotels() {
+    FilteredHotelData(FilteredData) {
+        console.log("The new Hotel Data recevied back is:" + JSON.stringify(FilteredData) );
+        this.setState({FilteredHotels: FilteredData});
+    }
+
+    revealHotelInfo() {
         this.setState({
-            hotelbooleancase: !this.state.hotelbooleancase
+            hotelbooleancase: true
         });
     }
 
@@ -90,6 +99,8 @@ export class HotelPage extends Component {
         let res = await axios.get(`http://engine.hotellook.com/api/v2/cache.json?location=${CityCode}&checkIn=${CheckIn}&checkOut=${CheckOut}&currency=USD`, config);
         let HotelInfo = res.data;
 
+        console.log("Data is: " + JSON.stringify(HotelInfo));
+
         for(let i = 0; i < HotelInfo.length; i++){
             var HotelObject = {PriceAverage: "", HotelId:"", stars: 0, HotelName: "", CityName: "", State: "", Country: ""};
             HotelObject["HotelId"] = HotelInfo[i].hotelId;
@@ -127,13 +138,19 @@ export class HotelPage extends Component {
 
     render(){
         
-        const {hotelbooleancase, HotelData, CheckIn, CheckOut, CityInput, TotalNumberofBookingDays} = this.state;
+        const {hotelbooleancase, HotelData, CheckIn, CheckOut, CityInput, TotalNumberofBookingDays, FilteredHotels} = this.state;
         var NavBarClassName = !hotelbooleancase ? "NavBar" : "NavBar-NotFixed";
+
+        var HotelArray = FilteredHotels.length > 0 ? FilteredHotels : HotelData;
 
         return(
         <React.Fragment>
             <Navbar bg="dark" variant="dark" className={NavBarClassName}>
-                <Navbar.Brand onClick={ () => window.location.reload(true) }>CovidTravel</Navbar.Brand>
+                <Navbar.Brand onClick={ () => {
+                        window.location.reload(true);
+                        //this.setState({hotelbooleancase: false});
+                        }
+                    }>CovidTravel</Navbar.Brand>
                 <Nav className="mr-auto">
                     <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                     <DropdownButton variant="outline-info" id="dropdown-item-button" title="Hotels for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
@@ -162,52 +179,47 @@ export class HotelPage extends Component {
                         </Form>
                         <div className="Button-Div">
                         <Button variant="info" onClick={ (event) => {
-                            if(CheckIn === "" || CheckOut === "" || CityInput === "")
-                                alert("Please enter a City and Booking Dates!");
-                            else {
-
-                                let StartBookingDate = new Date(CheckIn);
-                                let EndBookingDate = new Date(CheckOut);
-                                let numberofBookingDays = ( ( EndBookingDate.getTime() - StartBookingDate.getTime() ) / ( 24*60*60*1000 ));
-                                console.log("Number of total booking days: " + numberofBookingDays);
-
-                                this.setState({TotalNumberofBookingDays: numberofBookingDays});
-                                this.handleButtonSubmit(event);
-                                this.toggleHotels();
-                            }
+                                if(CheckIn === "" || CheckOut === "" || CityInput === "")
+                                    alert("Please enter a City and Booking Dates!");
+                                else {
+                                    let StartBookingDate = new Date(CheckIn);
+                                    let EndBookingDate = new Date(CheckOut);
+                                    let numberofBookingDays = ( (EndBookingDate.getTime() - StartBookingDate.getTime() ) / ( 24*60*60*1000 ) ) + 1;
+                                    console.log("Number of total booking days: " + numberofBookingDays);
+                                    this.setState({TotalNumberofBookingDays: numberofBookingDays});
+                                    this.handleButtonSubmit(event);
+                                    this.revealHotelInfo();
+                                }
                             }
                         }>Submit</Button>
                         </div>
                     </DropdownButton>
                 </Nav>
-                <Form inline>
-                    <FormControl type="text" placeholder="Search" className="mr-sm-2" />
-                </Form>
+                {HotelData.length > 0 ? <SearchBar TrackerData={HotelData} FilteredData={this.FilteredHotelData} /> : ""}
             </Navbar>
-            { hotelbooleancase ? 
+            {hotelbooleancase ?                                                            
             <div className="div-container2">
                 <Image src={HotelImage} style={ {height: "100%"}, {width: "100%"}, {opacity: "0.3"}} />
                 <Container className="container2">
                     <Row>
                     {
-                        HotelData.map( (HotelInfos, i) => {
-                        return <Col key={i} style={{padding: "10px"}, {margin: "10px"}}>
-                            <Card style={{ width: '18em' }}>
-                                <Card.Body>
-                                    <Card.Title>{HotelInfos.HotelName}</Card.Title>
-                                        <Card.Text>
-                                            <b>Cityname</b>: {HotelInfos.CityName} <br />
-                                            <b>State</b>: {HotelInfos.State} <br />
-                                            <b>Country</b>: {HotelInfos.Country} <br />
-                                        </Card.Text>
-                                    <b>Check In Date: </b> {CheckIn} <br />
-                                    <b>Check Out Date: </b> {CheckOut} <br />
-                                    <b># of stars: </b> {HotelInfos.stars} <br />
-                                    <b>Price per Day:</b> ${ ( (HotelInfos.PriceAverage)/(TotalNumberofBookingDays) ).toFixed(2) } <br />
-                                    <b>Total Price of Stay:</b> ${HotelInfos.PriceAverage.toFixed(2)} <br />
-                                </Card.Body>
-                            </Card>
-                        </Col>
+                        HotelArray.map( (HotelInfos, i) => {
+                            return <Col key={i} style={{padding: "10px"}, {margin: "10px"}}>
+                                <Card style={{ width: '18em' }}>
+                                    <Card.Body>
+                                        <Card.Title>{HotelInfos.HotelName}</Card.Title>
+                                            <Card.Text>
+                                                {CheckIn} to {CheckOut} <br />
+                                                <br />
+                                                <i>{HotelInfos.Country}</i> <br />
+                                                <i>{HotelInfos.CityName}, {HotelInfos.State}</i> <br />
+                                            </Card.Text>
+                                        ${ ( (HotelInfos.PriceAverage)/(TotalNumberofBookingDays) ).toFixed(2) } per day <br />
+                                        <b>Total: </b> ${HotelInfos.PriceAverage.toFixed(2)} <br />
+                                        <Rating name="half-rating-read" defaultValue={HotelInfos.stars} precision={0.5} readOnly /> <br />
+                                    </Card.Body>
+                                </Card>
+                            </Col>
                         })
                     }
                     </Row>
@@ -215,7 +227,7 @@ export class HotelPage extends Component {
             </div>
             : 
             <div>
-                <img src={HotelImage} alt="HotelImage"></img>
+                <img src={HotelImage} style={ {height: "100%"}, {width: "100%"} } alt="HotelImage"></img>
             </div>
             }
         </React.Fragment>

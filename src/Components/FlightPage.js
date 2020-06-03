@@ -18,6 +18,7 @@ import axios from 'axios';
 import ConfigFile from '../config/default.json'; //location of Auth Configs used to access TravelPayouts API
 import FlightImage from '../PNGFiles/nathan-hobbs-qmWqUl8Uvsc-unsplash.jpg';
 import '../CSSsheets/Travels.css';
+import SearchBar from '../Components/SearchBar.js';
 
 const AuthAccess = ConfigFile.UserInfo.AuthToken;
 
@@ -35,17 +36,24 @@ export class FlightPage extends Component {
             OriginCode: "",
             DestinationCode: "",
             DepartureDate: "",
-            ReturnDate: ""
+            ReturnDate: "",
+            FilteredFlights: []
         };
         this.toggleFlights = this.toggleFlights.bind(this);
         this.renderMonthlyFlightDate = this.renderMonthlyFlightDate.bind(this);
         this.handleButtonSubmit = this.handleButtonSubmit.bind(this);
         this.renderFlightDatesData = this.renderFlightDatesData.bind(this);
+        this.FilteredFlightData = this.FilteredFlightData.bind(this);
+    }
+
+    FilteredFlightData(FilteredData) {
+        console.log("The new Flight Data recevied back is:" + JSON.stringify(FilteredData) );
+        this.setState({FilteredFlights: FilteredData});
     }
 
     toggleFlights() {
         this.setState({
-            booleanButtonCase: !this.state.booleanButtonCase
+            booleanButtonCase: true
         });
     }
 
@@ -130,7 +138,7 @@ export class FlightPage extends Component {
         //bug with toggling between buttons for "Flights for the Month" and "Flights Tickets"
         let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=${DepartureDate}&return_date=${ReturnDate}&origin=${OriginCode}&destination=${DestinationCode}&calendar_type=departure_date&currency=USD`, config);
 
-        console.log("The data shown is " + JSON.stringify(res.data.data) );
+        //console.log("The data shown is " + JSON.stringify(res.data.data) );
 
         for(let [key, values] of Object.entries(res.data.data) ) {
             var flightobject = {flightDates: "", flightInfo:""};
@@ -160,8 +168,16 @@ export class FlightPage extends Component {
 
         //current api for month of may airlines from orlando to new york
         //make this total data from all USA flights for the month
+        var TodaysDate = new Date();
+        var currentMonth = TodaysDate.getMonth() + 1;
+        var currentYear = TodaysDate.getFullYear();
+        var concateDate = "";
+        
+        concateDate = (currentMonth < 10) ? currentYear.toString() + "-" + ("0" + currentMonth.toString()) : currentYear.toString() + "-" + currentMonth.toString(); ;
 
-        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=2020-05&origin=${Origin}&destination=${Destination}&calendar_type=departure_date&currency=USD`, config);
+        //console.log("The current Date is: " + concateDate);
+
+        let res = await axios.get(`https://api.travelpayouts.com/v1/prices/calendar?depart_date=${concateDate}&origin=${Origin}&destination=${Destination}&calendar_type=departure_date&currency=USD`, config);
 
         for(let [key, values] of Object.entries(res.data.data) ) {
             var flightobject = {flightDates: "", flightInfo:""};
@@ -175,13 +191,18 @@ export class FlightPage extends Component {
 
     render() {
 
-        const{FlightData, booleanButtonCase, DepartureDate, ReturnDate} = this.state;
+        const{FlightData, booleanButtonCase, DepartureDate, ReturnDate, FilteredFlights} = this.state;
         var NavBarClassName = !booleanButtonCase ? "NavBar" : "NavBar-NotFixed";
+        var FlightArray = FilteredFlights.length > 0 ? FilteredFlights : FlightData;
 
         return(
             <React.Fragment>
                 <Navbar bg="dark" variant="dark" className={NavBarClassName}>
-                    <Navbar.Brand onClick={ () => window.location.reload(true) }>CovidTravel</Navbar.Brand>
+                    <Navbar.Brand onClick={ () => {
+                        window.location.reload(true);
+                        //this.setState({booleanButtonCase: false});
+                            } 
+                        }>CovidTravel</Navbar.Brand>
                     <Nav className="mr-auto">
                         <Button variant="outline-info" href="/" style={ {padding: "5px"}, {margin: "5px"}} >Home</Button>
                         <DropdownButton variant="outline-info" id="dropdown-item-button" title="Flights for the Month" style={ {padding: "5px"}, {margin: "5px"}}>
@@ -242,16 +263,14 @@ export class FlightPage extends Component {
                                         alert("Please Enter a Depature Date and Return Date");
                                     else{
                                         this.renderFlightDatesData(event, DepartureDate, ReturnDate);
-                                        //this.toggleFlights();
+                                        this.toggleFlights();
                                     }                                
                                 }
                             }>Submit</Button>
                             </div>
                         </DropdownButton>
                     </Nav>
-                    <Form inline>
-                        <FormControl type="text" placeholder="Search" className="mr-sm-2" />
-                    </Form>
+                    {FlightData.length > 0 ? <SearchBar TrackerData={FlightData} FilteredData={this.FilteredFlightData} /> : "" }
                 </Navbar>
                 {booleanButtonCase ? //mapping out flight data for the upcoming week, when button is pressed we map our data below
                 <div className="div-container">
@@ -259,21 +278,18 @@ export class FlightPage extends Component {
                     <Container className="container">
                         <Row>
                         {
-                            FlightData.map( (flightInfos, i) => {
+                            FlightArray.map( (flightInfos, i) => {
                             return <Col key={i} style={{padding: "2px"}, {margin: "3px"}}>
                                 <Card style={{ width: '18rem' }}>
                                     <Card.Body>
-                                    <Card.Title>{flightInfos.flightInfo.departure_at.toString().slice(0,10)} -- {flightInfos.flightInfo.return_at.toString().slice(0,10)}</Card.Title>
+                                    <Card.Title> {flightInfos.flightInfo.origin} to {flightInfos.flightInfo.destination} </Card.Title>
                                         <Card.Text>
-                                            <b>AirLine</b>: {flightInfos.flightInfo.airline}<br />
-                                            <b>Flight Number</b>: {flightInfos.flightInfo.flight_number}<br />
-                                            <b># of Stops</b>: {flightInfos.flightInfo.transfers}<br />
+                                            <b>AirLine</b>: {flightInfos.flightInfo.airline} <b>Flight #</b>: {flightInfos.flightInfo.flight_number} <br />
+                                            <b>Number of Stops</b>: {flightInfos.flightInfo.transfers} <br />
                                         </Card.Text>
-                                        <b>Origin </b>: {flightInfos.flightInfo.origin}<br />
-                                        <b>Destination </b>: {flightInfos.flightInfo.destination}<br />
-                                        <b>Departure Time</b>: {flightInfos.flightInfo.departure_at.toString().slice(11, 19)}<br />
-                                        <b>Return Time</b>: {flightInfos.flightInfo.return_at.toString().slice(11, 19)}<br />
-                                        <b>Prices</b>: ${flightInfos.flightInfo.price}.00<br />
+                                        <i>{flightInfos.flightInfo.departure_at.slice(0,10)} to {flightInfos.flightInfo.return_at.slice(0,10)}</i> <br />
+                                        <i>{flightInfos.flightInfo.departure_at.toString().slice(11, 19)} to {flightInfos.flightInfo.return_at.toString().slice(11, 19)}</i> <br />
+                                        <b>Total</b>: ${flightInfos.flightInfo.price}.00 <br />
                                     </Card.Body>
                                 </Card>
                             </Col>
