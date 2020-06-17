@@ -140,7 +140,6 @@ export class HotelPage extends Component {
         
         const {hotelbooleancase, HotelData, CheckIn, CheckOut, CityInput, TotalNumberofBookingDays, FilteredHotels} = this.state;
         var NavBarClassName = !hotelbooleancase ? "NavBar" : "NavBar-NotFixed";
-
         var HotelArray = FilteredHotels.length > 0 ? FilteredHotels : HotelData;
 
         return(

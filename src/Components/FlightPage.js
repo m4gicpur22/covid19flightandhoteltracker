@@ -4,15 +4,12 @@ import {
     Nav,
     Form,
     Button,
-    FormControl,
-    Card,
     Container,
     Row,
     Col,
-    Dropdown,
     DropdownButton,
     Image,
-    Alert
+    Card
 } from "react-bootstrap";
 import axios from 'axios';
 import ConfigFile from '../config/default.json'; //location of Auth Configs used to access TravelPayouts API
@@ -123,7 +120,7 @@ export class FlightPage extends Component {
         //this function is gonna analyze dates taken by the user and show flights between departure date and return date given by the user
         event.preventDefault();
 
-        const {OriginState, DestinationState, defaultoken, OriginCode, DestinationCode} = this.state;
+        const {defaultoken, OriginCode, DestinationCode} = this.state;
         const FlightDateData = [];
 
         let config = { //need to fix cors issues later
@@ -152,8 +149,6 @@ export class FlightPage extends Component {
 
     async renderMonthlyFlightDate(Origin, Destination) {
 
-        //axios call to obtain flight data for the upcoming month from USA
-        //we are going to start by parsing data within United States
         const {defaultoken} = this.state;
         const currentMonthflightData = [];
 
@@ -166,14 +161,12 @@ export class FlightPage extends Component {
             }
         }
 
-        //current api for month of may airlines from orlando to new york
-        //make this total data from all USA flights for the month
         var TodaysDate = new Date();
         var currentMonth = TodaysDate.getMonth() + 1;
         var currentYear = TodaysDate.getFullYear();
         var concateDate = "";
         
-        concateDate = (currentMonth < 10) ? currentYear.toString() + "-" + ("0" + currentMonth.toString()) : currentYear.toString() + "-" + currentMonth.toString(); ;
+        concateDate = (currentMonth < 10) ? currentYear.toString() + "-" + ("0" + currentMonth.toString()) : currentYear.toString() + "-" + currentMonth.toString();
 
         //console.log("The current Date is: " + concateDate);
 
